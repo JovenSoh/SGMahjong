@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.js": "/SGMahjong/static/js/main.c54c173c.chunk.js",
+    "main.js.map": "/SGMahjong/static/js/main.c54c173c.chunk.js.map",
+    "runtime-main.js": "/SGMahjong/static/js/runtime-main.73b8e297.js",
+    "runtime-main.js.map": "/SGMahjong/static/js/runtime-main.73b8e297.js.map",
+    "static/js/2.7acd6792.chunk.js": "/SGMahjong/static/js/2.7acd6792.chunk.js",
+    "static/js/2.7acd6792.chunk.js.map": "/SGMahjong/static/js/2.7acd6792.chunk.js.map",
+    "index.html": "/SGMahjong/index.html",
+    "static/js/2.7acd6792.chunk.js.LICENSE.txt": "/SGMahjong/static/js/2.7acd6792.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.73b8e297.js",
+    "static/js/2.7acd6792.chunk.js",
+    "static/js/main.c54c173c.chunk.js"
+  ]
+}
