@@ -12,7 +12,7 @@ export default function Menu(){
       };
 
     function createGame() {
-        navigate(`/game/${gameID()}`)
+        navigate(`/SGMahjong/game/${gameID()}`)
     }
 
     return (

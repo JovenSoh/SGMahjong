@@ -10,8 +10,8 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element = {<Menu />} />
-        <Route path="/game/:gameId" element={<Table />} />
+        <Route path="/SGMahjong" element = {<Menu />} />
+        <Route path="/SGMahjong/game/:gameId" element={<Table />} />
       </Routes>
     </HashRouter>
   );
