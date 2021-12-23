@@ -10,8 +10,8 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/SGMahjong" element = {<Menu />} />
-        <Route path="/SGMahjong/game/:gameId" element={<Table />} />
+        <Route path="/sgmahjong" element = {<Menu />} />
+        <Route path="/sgmahjong/game/:gameId" element={<Table />} />
       </Routes>
     </Router>
   );

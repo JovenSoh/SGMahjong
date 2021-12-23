@@ -1,6 +1,6 @@
 {
-  "name": "mahjong",
-  "homepage": "https://jovensoh.github.io/SGMahjong",
+  "name": "sgmahjong",
+  "homepage": "https://jovensoh.github.io/sgmahjong",
   "version": "0.1.0",
   "private": false,
   "dependencies": {
