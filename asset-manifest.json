@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.js": "/sgmahjong/static/js/main.fd005818.chunk.js",
-    "main.js.map": "/sgmahjong/static/js/main.fd005818.chunk.js.map",
+    "main.js": "/sgmahjong/static/js/main.0018b978.chunk.js",
+    "main.js.map": "/sgmahjong/static/js/main.0018b978.chunk.js.map",
     "runtime-main.js": "/sgmahjong/static/js/runtime-main.f6fa728f.js",
     "runtime-main.js.map": "/sgmahjong/static/js/runtime-main.f6fa728f.js.map",
     "static/js/2.af31668a.chunk.js": "/sgmahjong/static/js/2.af31668a.chunk.js",
@@ -12,6 +12,6 @@
   "entrypoints": [
     "static/js/runtime-main.f6fa728f.js",
     "static/js/2.af31668a.chunk.js",
-    "static/js/main.fd005818.chunk.js"
+    "static/js/main.0018b978.chunk.js"
   ]
 }
