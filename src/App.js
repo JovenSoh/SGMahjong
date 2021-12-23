@@ -1,18 +1,18 @@
 import Table from "./components/Table";
 import Menu from "./components/Menu";
 import {
-  BrowserRouter as Router,
+  BrowserRouter as HashRouter,
   Routes, Route
 } from "react-router-dom"
 
 export default function App() {
   
   return (
-    <Router>
+    <HashRouter>
       <Routes>
-        <Route path="/SGMahjong/" element = {<Menu />} />
-        <Route path="/SGMahjong/game/:gameId" element={<Table />} />
+        <Route path="/" element = {<Menu />} />
+        <Route path="/game/:gameId" element={<Table />} />
       </Routes>
-    </Router>
+    </HashRouter>
   );
 };
