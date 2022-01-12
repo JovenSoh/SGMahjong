@@ -1,17 +1,21 @@
 {
   "files": {
-    "main.js": "/sgmahjong/static/js/main.0018b978.chunk.js",
-    "main.js.map": "/sgmahjong/static/js/main.0018b978.chunk.js.map",
-    "runtime-main.js": "/sgmahjong/static/js/runtime-main.f6fa728f.js",
-    "runtime-main.js.map": "/sgmahjong/static/js/runtime-main.f6fa728f.js.map",
-    "static/js/2.af31668a.chunk.js": "/sgmahjong/static/js/2.af31668a.chunk.js",
-    "static/js/2.af31668a.chunk.js.map": "/sgmahjong/static/js/2.af31668a.chunk.js.map",
-    "index.html": "/sgmahjong/index.html",
-    "static/js/2.af31668a.chunk.js.LICENSE.txt": "/sgmahjong/static/js/2.af31668a.chunk.js.LICENSE.txt"
+    "main.css": "/static/css/main.c302e49a.chunk.css",
+    "main.js": "/static/js/main.9826e271.chunk.js",
+    "main.js.map": "/static/js/main.9826e271.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.73caa8bf.js",
+    "runtime-main.js.map": "/static/js/runtime-main.73caa8bf.js.map",
+    "static/js/2.6bad75fd.chunk.js": "/static/js/2.6bad75fd.chunk.js",
+    "static/js/2.6bad75fd.chunk.js.map": "/static/js/2.6bad75fd.chunk.js.map",
+    "index.html": "/index.html",
+    "static/css/main.c302e49a.chunk.css.map": "/static/css/main.c302e49a.chunk.css.map",
+    "static/js/2.6bad75fd.chunk.js.LICENSE.txt": "/static/js/2.6bad75fd.chunk.js.LICENSE.txt",
+    "static/media/mahjongVid.74b8b9da.webm": "/static/media/mahjongVid.74b8b9da.webm"
   },
   "entrypoints": [
-    "static/js/runtime-main.f6fa728f.js",
-    "static/js/2.af31668a.chunk.js",
-    "static/js/main.0018b978.chunk.js"
+    "static/js/runtime-main.73caa8bf.js",
+    "static/js/2.6bad75fd.chunk.js",
+    "static/css/main.c302e49a.chunk.css",
+    "static/js/main.9826e271.chunk.js"
   ]
 }
