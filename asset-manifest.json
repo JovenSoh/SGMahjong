@@ -1,21 +1,21 @@
 {
   "files": {
     "main.css": "/sgmahjong/static/css/main.c302e49a.chunk.css",
-    "main.js": "/sgmahjong/static/js/main.4903f889.chunk.js",
-    "main.js.map": "/sgmahjong/static/js/main.4903f889.chunk.js.map",
+    "main.js": "/sgmahjong/static/js/main.a6cd159d.chunk.js",
+    "main.js.map": "/sgmahjong/static/js/main.a6cd159d.chunk.js.map",
     "runtime-main.js": "/sgmahjong/static/js/runtime-main.f6fa728f.js",
     "runtime-main.js.map": "/sgmahjong/static/js/runtime-main.f6fa728f.js.map",
-    "static/js/2.6bad75fd.chunk.js": "/sgmahjong/static/js/2.6bad75fd.chunk.js",
-    "static/js/2.6bad75fd.chunk.js.map": "/sgmahjong/static/js/2.6bad75fd.chunk.js.map",
+    "static/js/2.8a88e88d.chunk.js": "/sgmahjong/static/js/2.8a88e88d.chunk.js",
+    "static/js/2.8a88e88d.chunk.js.map": "/sgmahjong/static/js/2.8a88e88d.chunk.js.map",
     "index.html": "/sgmahjong/index.html",
     "static/css/main.c302e49a.chunk.css.map": "/sgmahjong/static/css/main.c302e49a.chunk.css.map",
-    "static/js/2.6bad75fd.chunk.js.LICENSE.txt": "/sgmahjong/static/js/2.6bad75fd.chunk.js.LICENSE.txt",
+    "static/js/2.8a88e88d.chunk.js.LICENSE.txt": "/sgmahjong/static/js/2.8a88e88d.chunk.js.LICENSE.txt",
     "static/media/mahjongVid.74b8b9da.webm": "/sgmahjong/static/media/mahjongVid.74b8b9da.webm"
   },
   "entrypoints": [
     "static/js/runtime-main.f6fa728f.js",
-    "static/js/2.6bad75fd.chunk.js",
+    "static/js/2.8a88e88d.chunk.js",
     "static/css/main.c302e49a.chunk.css",
-    "static/js/main.4903f889.chunk.js"
+    "static/js/main.a6cd159d.chunk.js"
   ]
 }
