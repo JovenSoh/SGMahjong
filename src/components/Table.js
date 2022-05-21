@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import {Flex, Box, Center, Button, useDisclosure} from '@chakra-ui/react'
+import {Flex, Button, Box, Spacer, Collapse, useDisclosure} from '@chakra-ui/react'
 import { useParams } from "react-router-dom"
 import { checkGame, compare, getChow } from './Mahjong';
 import Board from './Board'
-import ChowSelector from './ChowSelector';
 import Summary from './Summary';
 import Information from './Information';
-import Draw from './Draw';
 import Username from './Username';
 
 export default function Table() {
   let sequentialTiles_top, sequentialTiles_mid, sequentialTiles_bot
   const gameId = useParams().gameId
-  const [socketUrl, setSocketUrl] = useState(`ws://irscybersec.tk:3000/${gameId}`);
+  //socket stuff
+  const [socketUrl, setSocketUrl] = useState(`wss://mahjong.irscybersec.tk/api/${gameId}`); //`ws://localhost:3001/${gameId}` || `wss://mahjong.irscybersec.tk/api/${gameId}`
   const [messageHistory, setMessageHistory] = useState([]);
   //set users
   const [onlineUsers, setOnlineUsers] = useState([])
@@ -33,17 +32,19 @@ export default function Table() {
   const [discards, setDiscards] = useState([])
   const [lastDiscard, setLastDiscard] = useState()
   //moves
-  const [pong, setPong] = useState(false)
-  const { isOpen, onOpen, onClose } = useDisclosure() //for multichow
-  const [sequentialTiles, setSequentialTiles] = useState()
-  const [chow, setChow] = useState(false)
-  const [multiChow, setMultiChow] = useState(false)
+  const [sequentialTiles, setSequentialTiles] = useState([])
+  const [pongTiles, setPongTiles] = useState([])
+  const [kongTiles, setKongTiles] = useState([])
   const [game, setGame] = useState(false)
   const [summary, setSummary] = useState()
   //others
   const [currentTurn, setCurrentTurn] = useState(false) //whether it is your turn
+  const { isOpen: isOpenSummary, onOpen: onOpenSummary, onClose: onCloseSummary } = useDisclosure() //for Summary
+  const { isOpen: isOpenInformation, onClose: onCloseInformation, onToggle: onToggleInformation} = useDisclosure() //for Information
   const [draw, setDraw] = useState(false)
   const [roundEnd, setRoundEnd] = useState(false)
+  const [minimumPoints, setMinimumPoints] = useState(1)
+  const [delay, setDelay] = useState(3000) //set turn timer
   const [gameState, setGameState] = useState([]) 
   /* [  socket: Websocket,
         playerID: playerID,
@@ -60,37 +61,122 @@ export default function Table() {
 
   //discarding tiles
   const handleDiscard = () => {
-    game ? setGame(false) : setGame(false) //if self-drawn, set game back to false
-    console.log("Discarding ", selectedTile)
-    sendMessage('Discard: ' + JSON.stringify(selectedTile))
-    //find the index of discarded tile in our hand
-    let discard_index = tiles.filter(e => !((e.suit===selectedTile.suit) && (e.value===selectedTile.value) && (e.id===selectedTile.id)) )
+    if (!roundEnd){
+      game ? setGame(false) : setGame(false) //if self-drawn, set game back to false
+      console.log("Discarding ", selectedTile)
+      sendMessage('Discard: ' + JSON.stringify(selectedTile))
+      //filter out the discarded tile from our hand
+      let newTiles = tiles.filter(e => !((e.suit===selectedTile.suit) && (e.value===selectedTile.value) && (e.id===selectedTile.id)) )
 
-    setTiles(discard_index)
-    setSelectedTile(null)
-    setCurrentTurn(false)
+      setTiles(newTiles)
+      setSelectedTile(null)
+      //empty kong tiles if I'm not using it
+      setKongTiles([])
+      setCurrentTurn(false)
+    }
   }
 
-  //functions for making moves (chow, pong, game)
+  //function for checking for immediate payouts
+  const checkPetty = (bonuses) => {
+    //check within the new bonus tiles
+    //predator prey
+    if (bonuses.filter(e => (e.suit === "cat") || (e.suit === "mouse")).length === 2){
+      console.log("CAT MOUSE PAIR")
+      sendMessage("AnimalPair")
+    } else if (bonuses.filter(e => (e.suit === "rooster") || (e.suit === "centipede")).length === 2){
+      console.log("ROOSTER CENTIPEDE PAIR")
+      sendMessage("AnimalPair")
+    }
+
+    if (bonuses.filter(e => (e.value === 1)).length === 2){
+      console.log("FlowerPair 1")
+      sendMessage("FlowerPair ~east")
+    } else if (bonuses.filter(e => (e.value === 2)).length === 2){
+      console.log("2 FLOWER PAIR")
+      sendMessage("FlowerPair ~south")
+    } else if (bonuses.filter(e => (e.value === 3)).length === 2){
+      console.log("3 FLOWER PAIR")
+      sendMessage("FlowerPair ~west")
+    } else if (bonuses.filter(e => (e.value === 4)).length === 2){
+      console.log("4 FLOWER PAIR")
+      sendMessage("FlowerPair ~north")
+    }
+
+    //flowers
+    //for each bonus
+    bonuses.forEach(bonus => {
+      //check for predator prey
+      if ((bonus.suit === "mouse" && bonusTiles.filter(e => e.suit === "cat").length > 0) || (bonus.suit === "cat" && bonusTiles.filter(e => e.suit === "mouse").length > 0) ){
+        console.log("CAT MOUSE PAIR")
+        sendMessage("AnimalPair")
+      }else if ((bonus.suit === "rooster" && bonusTiles.filter(e => e.suit === "centipede").length > 0) || (bonus.suit === "centipede" && bonusTiles.filter(e => e.suit === "rooster").length > 0) ){
+        console.log("ROOSTER CENTIPEDE PAIR")
+        sendMessage("AnimalPair")
+      }
+
+      //check for flower pair
+      if (bonusTiles.filter(e => e.value === bonus.value).length === 1){
+        console.log(`${bonus.value} FLOWER PAIR`)
+      }
+    })
+  }
+
+  const lookup = tiles.reduce((a, e) => {
+    a[`${e.suit} ${e.value}`] = ++a[`${e.suit} ${e.value}`] || 0;
+    return a;
+  }, {});
+
+  const checkKong = (newTile) => {
+    //check kong within hand
+    let four_concealed = tiles.filter(e => (e.suit === newTile.suit) && (e.value === newTile.value)).concat(newTile)
+    let kongSets = tiles.filter(e => lookup[`${e.suit} ${e.value}`] == 3)
+
+    if (four_concealed.length == 4){
+      setKongTiles([four_concealed.concat("four")])
+      console.log("Four concealed kong", four_concealed)
+    }else if(kongSets){
+      setKongTiles([kongSets.concat("four")])
+      console.log("kongSets", kongSets)
+    }
+
+    //check kong in exposed
+    let gameStateIndex = gameState.findIndex(e => e.playerID === clientID)
+    let exposed = gameState[gameStateIndex].revealedTiles
+    let one_concealed = exposed.filter(e => (e.suit === newTile.suit) && (e.value === newTile.value)).concat(newTile)
+    if (one_concealed.length == 4){
+      setKongTiles([one_concealed.concat("one")])
+      console.log("One concealed kong",one_concealed)
+    }
+  }
+
+  //functions for making moves (chow, pong, kong, game)
   const checkValidMoves = (lastDiscard) => {
-    if (lastDiscard){
+    //if there was a last discard and last discarder is not the player
+    if (lastDiscard && clientID !== previousPlayer){
       //check for winning hand
       let [game_temp, summary_temp] = checkGame(tiles,revealedTiles,bonusTiles,tableWind,yourWind, lastDiscard, [])
       setSummary(summary_temp)
-      if (game_temp) {
+      console.log("Summary: ",summary_temp)
+      //if the discarded tile builds a winning hand and has more than minimum points
+      if (game_temp && summary_temp.totalPoints >= minimumPoints) {
         setGame(game_temp)
         setTimeout(() => {
           setGame(false)
-        },3000)
+        },delay)
       }
       //check for pong
-      let sameTiles = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value))
+      let sameTiles = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value)).concat(lastDiscard)
       console.log("Same tiles: ", sameTiles)
-      if (sameTiles.length >= 2) {
-        setPong(true)
+      if (sameTiles.length == 3) {
+        setPongTiles([sameTiles])
         setTimeout(() => {
-          setPong(false)
-        },3000)
+          setPongTiles([])
+        },delay)
+      }else if (sameTiles.length == 4){
+        setKongTiles([sameTiles.concat("three")])
+        setTimeout(() => {
+          setKongTiles([])
+        },delay)
       }
 
       //check if last discard is from the guy before you
@@ -105,68 +191,46 @@ export default function Table() {
         sequentialTiles_bot = getChow(sequentialTiles_bot)
         //check for multiple chows
         let sequentialTiles_temp = [sequentialTiles_top,sequentialTiles_mid,sequentialTiles_bot].filter(e => e.length===2)
-        setSequentialTiles(sequentialTiles_temp)
-        
-        if (sequentialTiles_temp.length > 1){
-          setMultiChow(true)
+
+        if (sequentialTiles_temp.length > 0){
+          setSequentialTiles(sequentialTiles_temp)
           setTimeout(() => {
-            setMultiChow(false)
-          },3000)
+            setSequentialTiles([])
+          },delay)
         }
 
-        if (sequentialTiles_top.length == 2 || sequentialTiles_mid.length == 2 || sequentialTiles_bot.length == 2){
-          setChow(true)
-          setTimeout(() => {
-            setChow(false)
-          },3000)
-        }
       }
     }
   }
 
-  const handlePong = () => {
-    let pongSet = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value)).concat(lastDiscard)
+  const handlePong = (pongSet) => {
+    console.log("PONG!", pongTiles)
+    setPongTiles([])
     sendMessage(clientID + " pong " + JSON.stringify(pongSet))
-    setPong(false)
   }
 
-  const handleChow = (multiChow) => {
-    console.log("CHOW!")
-    console.log("Sequential: ", sequentialTiles)
-    let chowSet=[]
-    //check for chow
-    sequentialTiles_top = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value-1 || e.value === lastDiscard.value-2 ) )
-    sequentialTiles_mid = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value-1 || e.value === lastDiscard.value+1 ) )
-    sequentialTiles_bot = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value+1 || e.value === lastDiscard.value+2 ) )
-
-    if (sequentialTiles.length === 1){
-      chowSet = sequentialTiles[0].concat(lastDiscard)
-      console.log("Sequential Tiles:", sequentialTiles_top)
-    }else if (sequentialTiles.length > 1){
-      chowSet = multiChow.concat(lastDiscard)
-      console.log("Sequential Tiles:", sequentialTiles_top)
-      setMultiChow(false)
-      setSequentialTiles()
-      onClose()
+  const handleKong = (kongSet, type) => {
+    console.log("KONG!", kongSet, type)
+    setKongTiles([])
+    if (type === "three"){
+      sendMessage(clientID + " threekong " + JSON.stringify(kongSet))
+    }else if (type==="four"){
+      sendMessage(clientID + " fourkong " + JSON.stringify(kongSet))
+    }else if (type==="one"){
+      sendMessage(clientID + " onekong " + JSON.stringify([kongSet[0]]))
     }
+  }
 
+  const handleChow = (chowSet) => {
+    console.log("CHOW!", sequentialTiles)
+    setSequentialTiles([])
     sendMessage(clientID + " chow " + JSON.stringify(chowSet))
-    setChow(false)
-  }
-
-  const handleMultiChow = () => {
-    //check for multiple chows
-    if (!isOpen){
-      onOpen() //open modal
-      console.log("Multi Chow detector: ", sequentialTiles)
-      sendMessage(clientID + " multichow ")
-    }
-    setMultiChow(false)
   }
 
   const handleGame = () => {
     sendMessage(clientID + " WINS! "+JSON.stringify(summary)+" "+JSON.stringify(tiles))
     setGame(false)
+    setTiles([])
   }
 
   const handleNewGame = () => {
@@ -183,20 +247,19 @@ export default function Table() {
     [ReadyState.CONNECTING]: 'Connecting',
     [ReadyState.OPEN]: 'Connected',
     [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
+    [ReadyState.CLOSED]: 'Disconnected',
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
   
   useEffect(() => {
     if (lastMessage !== null) {
-      console.log("Last message: ",lastMessage.data)
       setMessageHistory(prev => prev.concat(lastMessage));
+      console.log("Last message:", lastMessage.data)
       if (lastMessage.data.includes("Online users:")) {
         let userList = lastMessage.data.replace("Online users: ","")
         setOnlineUsers(userList)
       }else if (lastMessage.data.includes("Game state")) {
         let gameState_temp = lastMessage.data.replace("Game state: ","")
-        console.log("Game state: ", gameState_temp)
         setGameState(JSON.parse(gameState_temp))
       }else if (lastMessage.data.includes("Your ID")) {
         let clientID_temp = lastMessage.data.replace("Your ID: ","")
@@ -210,16 +273,17 @@ export default function Table() {
         }
         setNewTile(tiles_temp)
         console.log("New tiles:", tiles_temp)
-        //if a new tile is drawn, check if 自摸
+        //if a new tile is drawn, check if 自摸 or concealed kong
         if (tiles_temp.length !== 13){
           console.log("Tiles:",tiles)
           let [game_temp, summary_temp] = checkGame(tiles,revealedTiles,bonusTiles,tableWind,yourWind,[], tiles_temp)
+          checkKong(tiles_temp)
           setGame(game_temp)
           setSummary(summary_temp)
-          console.log(summary_temp)
         }
       } else if (lastMessage.data.includes("Bonus")) {
         let bonusTiles_temp = JSON.parse(lastMessage.data.replace("Bonus: ",""))
+        checkPetty(bonusTiles_temp)
         setBonusTiles(prev => prev.concat(bonusTiles_temp))
       }else if (lastMessage.data.includes("Table wind")) {
         setTableWind(lastMessage.data.replace("Table wind: ",""))
@@ -235,16 +299,18 @@ export default function Table() {
         checkValidMoves(discards_temp.at(-1))
       }else if (lastMessage.data.includes("Previous player: ")) {
         setPreviousPlayer(lastMessage.data.replace("Previous player: ",""))
+      }else if (lastMessage.data.includes("Ping!")){
+        sendMessage("Ping!")
       }else if (lastMessage.data.includes("Revealed")) {
         //sucessfull move made
         let revealedTiles_temp = JSON.parse(lastMessage.data.replace("Revealed: ",""))
         let newTiles = tiles
         console.log("New Tiles: ", newTiles)
-
+        //remove from our hand
         for (let i=0; i<revealedTiles_temp.length; i++){
           console.log("Target: ",revealedTiles_temp[i])
           console.log("Target Index: ", newTiles.indexOf(revealedTiles_temp[i]))
-          newTiles = newTiles.filter((tile) => !((tile.suit === revealedTiles_temp[i].suit) && (tile.value === revealedTiles_temp[i].value)))
+          newTiles = newTiles.filter((tile) => !((tile.suit === revealedTiles_temp[i].suit) && (tile.value === revealedTiles_temp[i].value) && (tile.id === revealedTiles_temp[i].id)))
         }
         setTiles(newTiles)
         setRevealedTiles(prev => prev.concat(revealedTiles_temp).sort(compare))
@@ -253,14 +319,15 @@ export default function Table() {
         setCurrentPlayer(currentPlayer_temp.substring(1, currentPlayer_temp.length-1))
       }else if (lastMessage.data.includes("New game!")) {
         setRoundEnd(false)
+        setDraw(false)
         setDiscards([])
         setLastDiscard()
-        setTiles([])
         setBonusTiles([])
         setRevealedTiles([])
         setSelectedTile()
-        setSummary()
       }else if (lastMessage.data.includes("wins")) {
+        sendMessage("ShowAll: " + JSON.stringify(tiles))
+        setTiles([])
         setRoundEnd(true)
         let summary_temp = JSON.parse(lastMessage.data.split(" ")[2])
         setSummary(summary_temp)
@@ -268,6 +335,8 @@ export default function Table() {
       }else if (lastMessage.data.includes("Draw:")) {
         setDraw(true)
         setRoundEnd(true)
+        sendMessage("ShowAll: " + JSON.stringify(tiles))
+        setTiles([])
       }
     }
   }, [lastMessage, setMessageHistory]);
@@ -276,19 +345,19 @@ export default function Table() {
   return (
     <>
       <Username sendMessage={sendMessage} />
-      <Flex>
-        <Board clientID={clientID} tiles={tiles} newTile={newTile} handleSelectTile={handleSelectTile} currentTurn={currentTurn} currentPlayer={currentPlayer} gameState={gameState} discards={discards}  selectedTile={selectedTile} handleDiscard={handleDiscard} pong={pong} handlePong={handlePong} chow={chow} handleChow={handleChow} multiChow={multiChow} handleMultiChow={handleMultiChow} game={game} handleGame={handleGame} />
-        <Information tableWind={tableWind} yourWind={yourWind} currentPlayer={currentPlayer} gameState={gameState} handleNewGame={handleNewGame} roundEnd={roundEnd} />
+      
+      <Flex zIndex={1} w='100%' m='auto' position="absolute" >
+        <Board clientID={clientID} tiles={tiles} newTile={newTile} handleSelectTile={handleSelectTile} currentTurn={currentTurn} currentPlayer={currentPlayer} gameState={gameState} discards={discards}  selectedTile={selectedTile} handleDiscard={handleDiscard} lastDiscard={lastDiscard} pongTiles={pongTiles} handlePong={handlePong}handleChow={handleChow} sequentialTiles={sequentialTiles} kongTiles={kongTiles} handleKong={handleKong} game={game} handleGame={handleGame} />
       </Flex>
 
-      <Box>
-        <ChowSelector sequentialTiles={sequentialTiles} isOpen={isOpen} onClose={onClose} handleChow = {handleChow} lastDiscard = {lastDiscard} />
-        <Summary winnerID={winnerID} roundEnd={roundEnd} setRoundEnd={setRoundEnd} summary={summary} handleNewGame={handleNewGame} draw={draw} />
-        <Draw draw={draw} setDraw={setDraw} roundEnd={roundEnd} setRoundEnd={setRoundEnd} handleNewGame={handleNewGame} />
-        <p>Online Users: {onlineUsers} </p>
+      <Flex zIndex={2} h='100vh' float="right" position="relative">
+        <Button variant="link" _focus={false} onClick={onToggleInformation}> {!isOpenInformation? "ᐅ" : "ᐊ" } </Button>
+        <Collapse in={!isOpenInformation} onClose={onCloseInformation} placement='right' >
+          <Information tableWind={tableWind} yourWind={yourWind} playerID={clientID} currentPlayer={currentPlayer} gameState={gameState} handleNewGame={handleNewGame} roundEnd={roundEnd} onOpen={onOpenSummary} summary={summary} connectionStatus={connectionStatus} />
+        </Collapse>
+      </Flex>
 
-        <p>Connection Status: {connectionStatus}</p>
-      </Box>
+      <Summary username={gameState.find(e => e.playerID === winnerID)} roundEnd={roundEnd} summary={summary} handleNewGame={handleNewGame} draw={draw} isOpen={isOpenSummary} onOpen={onOpenSummary} onClose={onCloseSummary} />
     </>
   );
 };

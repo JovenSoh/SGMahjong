@@ -13,7 +13,7 @@ export default function Draw({draw, setDraw, roundEnd,setRoundEnd, handleNewGame
     }
 
     const handleClose = () => {
-        setDraw(true)
+        setDraw(false)
         setRoundEnd(false)
         setNewGame(true)
         onClose()

@@ -1,26 +1,27 @@
-import {HStack, VStack, Box, Center} from '@chakra-ui/react'
+import {HStack, VStack, Box, Image} from '@chakra-ui/react'
+import Tile from './Tile'
 
-export default function Tileset({tiles, direction}) {
+export default function Tileset({tiles, direction, hoveredTile}) {
   if (direction === "vertical"){
+    let spacing = 0
+    if (tiles.length > 10){
+      spacing = 0.14*tiles.length
+    }
     return (
-      <VStack spacing='0px'>
+      <VStack spacing={`-${spacing}vh`}>
       {tiles.map((tile) => {
         return (
-          <Box fontSize={40} textShadow="3px 4px #343434" h='5vh' w='6vh'>
-            {tile.picture}
-          </Box> 
+          <Tile picture={tile.picture} hoveredTile={hoveredTile} />
           )
       })}
       </VStack>
     )
   }else{
     return (
-      <HStack spacing='0px'>
+      <HStack spacing='1px'>
       {tiles.map((tile) => {
         return (
-          <Box fontSize={40} textShadow="3px 4px #343434" h='5vh' w='6vh'>
-            {tile.picture}
-          </Box> 
+          <Tile picture={tile.picture} hoveredTile={hoveredTile} />
           )
       })}
       </HStack>

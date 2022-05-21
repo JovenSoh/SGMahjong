@@ -34,7 +34,61 @@ export function getChow(chowSet) {
   return result
 }
 
-export function checkMahjong(hand) {
+export function checkHand(hand, winner, eye){
+  console.log("Recursion",hand, winner, eye)
+  //4 sets and an eye, so if there are more sets, it's wrong
+  if (winner.length > 5){
+    return [false,winner,eye]
+  }
+  //remove tiles marked as winning from hand
+  if (winner.length > 0){
+    winner.forEach((set) => {
+      set.forEach((tile) => {
+        hand = hand.filter(e => !((e.picture === tile.picture) && (e.id === tile.id)))
+      })
+    })
+  }
+  //base case, minimum of 2 tiles to form a set
+  if (hand.length > 0){
+    //check for chow
+    let sequential = getChow(hand.filter(e => (e.suit === hand[0].suit) && (e.value === hand[0].value || e.value === hand[0].value+1 || e.value === hand[0].value+2)))
+    //check for same tiles
+    let same = hand.filter(e => e.picture === hand[0].picture)
+
+    if (sequential.length == 3) {
+      console.log("Sequential set", sequential)
+      if (checkHand(hand,winner.concat([sequential]),eye)[0]){
+        return checkHand(hand,winner.concat([sequential]),eye)
+      }
+    }
+    if (same.length == 4){
+      console.log("Kong set", same)
+      if (checkHand(hand,winner.concat([same]),eye)[0]){
+        return checkHand(hand,winner.concat([same]),eye)
+      }
+    }
+    if (same.length == 3){
+      console.log("Pong set", same)
+      if (checkHand(hand,winner.concat([same]), eye)[0]){
+        return checkHand(hand,winner.concat([same]),eye)
+      }
+    }
+    if (same.length == 2 && !eye){
+      console.log("Eye", same)
+      if (checkHand(hand,winner.concat([same]), true)[0]){
+        return checkHand(hand,winner.concat([same]),true)
+      }
+    }
+    //if the current tile doesn't form a set, return false and stop this branch
+    return [false, winner, eye]
+  }else if (hand.length === 0){ //if there are no tiles left
+    return [true, winner, eye]
+  }
+  
+}
+
+export function checkMahjong(hidden, revealed) {
+  let hand=hidden.concat(revealed)
   //check for special cases
   //1. 7 pair
   const lookupPair = hand.reduce((a, e) => {
@@ -57,53 +111,39 @@ export function checkMahjong(hand) {
     return [true,[],[],[],"十三幺"]
   }
 
-  //filter out the chows
-  let chowSets = []
-  for (let i=hand.length - 1; i>=2; i--) {
-    if (hand[i]){
-      let potentialChow =  hand.filter(e => (e.suit === hand[i].suit) && (e.value === hand[i].value-1 || e.value === hand[i].value-2 ) )
-      potentialChow = getChow(potentialChow)
-      if (potentialChow.length === 2) {
-        chowSets = chowSets.concat([[potentialChow[0],potentialChow[1],hand[i]]])
-        let chowA = hand.indexOf(hand[i])
-        let chowB = hand.findIndex(e => (e.suit === potentialChow[1].suit && e.value === potentialChow[1].value && e.id === potentialChow[1].id))
-        let chowC = hand.findIndex(e => (e.suit === potentialChow[0].suit && e.value === potentialChow[0].value && e.id === potentialChow[0].id))
-        hand.splice(chowA,1)
-        hand.splice(chowB,1)
-        hand.splice(chowC,1)
+  let [win, winningHand] = checkHand(hidden,[],false)
+  let [temp, revealedHand] = checkHand(revealed,[],false)
+  winningHand = revealedHand.concat(winningHand)
+  if (win){
+    console.log("Winning hand!", winningHand)
+    let eye
+    let same = []
+    let sequentials = []
+    winningHand.forEach((set) => {
+      let set_temp = set.filter((tile) => tile.picture === set[0].picture)
+      console.log("Set temp", set_temp)
+      //handle same tiles
+      if (set_temp.length > 1){
+        if (set.length == 2){
+          eye = set
+        }else{
+          same = same.concat([set])
+        }
+      }else{
+        sequentials = sequentials.concat([set])
       }
-    }
+    })
+    return [true,sequentials,same,eye,null]
   }
 
-  //filter out the pongs
-  const lookup = hand.reduce((a, e) => {
-    a[`${e.suit} ${e.value}`] = ++a[`${e.suit} ${e.value}`] || 0;
-    return a;
-  }, {});
-
-  let pongSets = hand.filter(e => lookup[`${e.suit} ${e.value}`] >= 2)
-  hand = hand.filter(e => lookup[`${e.suit} ${e.value}`] < 2)
-
-  let eye = hand
-  console.log("Chow sets: ", chowSets)
-  console.log("Pong sets: ", pongSets)
-  console.log("Eye:", eye)
-  //check eye
-  if (eye.length === 2){
-    if ((eye[0].suit === eye[1].suit) && (eye[0].value === eye[1].value)){
-      return [true, chowSets, pongSets, eye, null]
-    }
-  }
-
-  return [false]
+  return [false,[],[],[],""]
 
 }
 
 export function checkGame(tiles, revealed, bonusTiles,tableWind,yourWind, lastDiscard,drawn) {
-  let hand = tiles.concat(revealed.concat(lastDiscard).concat(drawn)).sort(compare)
   let mahjong = tiles.concat(revealed.concat(lastDiscard).concat(drawn)).sort(compare)
   let pointsLimit = 5
-  let summary
+  let summary, summary_combination
 
   //Mahjong hands
   let combination = [
@@ -130,17 +170,19 @@ export function checkGame(tiles, revealed, bonusTiles,tableWind,yourWind, lastDi
      points: 1},
      {name: "七对子",
      value: false,
-     points: 5},
+     points: 3},
      {name: "十三幺",
      value: false,
      points: 5},
   ]
   
-  let [game, chowSets, pongSets, eye, special] = checkMahjong(hand)
+  let [game, chowSets, pongSets, eye, special] = checkMahjong(tiles.concat(lastDiscard).concat(drawn).sort(compare), revealed)
+  console.log("Pong Sets:", pongSets)
+  console.log("Chow sets:", chowSets)
+  console.log("Eye:", eye)
 
   //check strength of hand
   if (special){
-    
     if (special === "七对子"){
       combination[combination.findIndex(e => e.name === "七对子")].value = true
     } else if (special === "十三幺"){
@@ -148,7 +190,7 @@ export function checkGame(tiles, revealed, bonusTiles,tableWind,yourWind, lastDi
     }
   }else if (game){
     //all pong game
-    if (pongSets.length >= 12){
+    if (pongSets.length >= 4){
       combination[combination.findIndex(e => e.name === "allPong")].value = true
     }
     //check allChow
@@ -200,7 +242,7 @@ export function checkGame(tiles, revealed, bonusTiles,tableWind,yourWind, lastDi
     }
 
     //count points
-    let points = 0
+    let points = 0, dragonPoints = 0, tableWindPoints = 0, yourWindPoints = 0
     //count bonus tiles
     //animal tiles
     let animals = ['cat','mouse','rooster','centipede']
@@ -208,15 +250,18 @@ export function checkGame(tiles, revealed, bonusTiles,tableWind,yourWind, lastDi
     console.log("Animals: ", animalPoints)
     //wind tiles
     let winds = ["~east","~south","~west","~north"]
-    let windPoints = bonusTiles.filter(e => !animals.includes(e.suit) && winds[e.value-1] === yourWind ).length
-    console.log("Winds: ", windPoints)
+    let flowerPoints = bonusTiles.filter(e => !animals.includes(e.suit) && winds[e.value-1] === yourWind ).length
+    console.log("Flowers: ", flowerPoints)
     //find honors tiles in pong sets
     let dragon = ["~red","~green","~white"]
-    let dragonPoints = (pongSets.filter(e => dragon.includes(e.suit)).length/3)
+    pongSets.forEach((set) => {
+      console.log("PongSets: ", set)
+      dragonPoints += Math.floor(set.filter(e => dragon.includes(e.suit)).length/3)
+      tableWindPoints += Math.floor(set.filter(e => e.suit === tableWind).length/3)
+      yourWindPoints += Math.floor(set.filter(e => e.suit === yourWind).length/3)
+    })
     console.log("Dragon Tiles: ",dragonPoints)
-    let tableWindPoints = (pongSets.filter(e => e.suit === tableWind).length/3)
     console.log("Table Wind: ",tableWindPoints)
-    let yourWindPoints = (pongSets.filter(e => e.suit === yourWind).length/3)
     console.log("Your Wind: ",yourWindPoints)
 
     function add(accumulator, a) {
@@ -226,19 +271,29 @@ export function checkGame(tiles, revealed, bonusTiles,tableWind,yourWind, lastDi
     let combinationPoints = combination.filter(e => e.value === true).map(e => e.points).reduce(add,0)
     console.log("Combi points: ", combinationPoints)
 
-    points = (dragonPoints+tableWindPoints+yourWindPoints + combinationPoints + animalPoints + windPoints > pointsLimit) ? pointsLimit : dragonPoints+tableWindPoints+yourWindPoints + combinationPoints + animalPoints + windPoints
+    points = (dragonPoints+tableWindPoints+yourWindPoints + combinationPoints + animalPoints + flowerPoints > pointsLimit) ? pointsLimit : dragonPoints+tableWindPoints+yourWindPoints + combinationPoints + animalPoints + flowerPoints
     console.log("Total points: ", points)
 
+    summary_combination = combination.filter(e => e.value === true).map(
+      function(e){
+        return {
+          [e.name] : e.points
+        }
+      }
+    )
+
     summary = {
+      ...summary_combination[0],
       animalPoints: animalPoints,
-      windPoints: windPoints,
+      flowerPoints: flowerPoints,
       dragonPoints: dragonPoints,
       tableWindPoints: tableWindPoints,
       yourWindPoints: yourWindPoints,
-      combinationPoints: combinationPoints,
       totalPoints: points,
       selfDrawn: lastDiscard.length === 0? true : false
     } 
+
+
  }
 
   return [game, summary]

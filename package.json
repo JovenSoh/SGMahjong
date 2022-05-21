@@ -1,9 +1,10 @@
 {
   "name": "sgmahjong",
-  "homepage": "https://jovensoh.github.io/sgmahjong",
+  "homepage": "http://jovensoh.github.io/sgmahjong",
   "version": "0.1.0",
   "private": false,
   "dependencies": {
+    "@chakra-ui/icons": "^1.1.1",
     "@chakra-ui/react": "^1.7.2",
     "@emotion/react": "^11.6.0",
     "@emotion/styled": "^11.6.0",
