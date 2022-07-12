@@ -8,7 +8,7 @@ import Tile from './Tile'
 import { motion } from "framer-motion"
 import Actions from './Actions'
 
-export default function Board({clientID, tiles, newTile, handleSelectTile,currentTurn, currentPlayer, gameState, discards, selectedTile, handleDiscard, lastDiscard, pongTiles, handlePong, sequentialTiles, handleChow, kongTiles, handleKong, game, handleGame}){
+export default function Board({clientID, tiles, newTile, handleSelectTile,currentTurn, currentPlayer, gameState, discards, selectedTile, handleDiscard, lastDiscard, pongTiles, handlePong, sequentialTiles, handleChow, kongTiles, handleKong, game, handleGame, validMove, setValidMove, handleSkip}){
     const [hoveredTile, setHoveredTile] = useState()
     let gameStateIndex = gameState.findIndex(e => e.playerID === clientID)
     
@@ -60,7 +60,7 @@ export default function Board({clientID, tiles, newTile, handleSelectTile,curren
                 { gameState[(gameStateIndex+1)%4]? <OtherPlayer gameState={gameState} gameStateIndex={gameStateIndex} currentPlayer={currentPlayer} playerIndex={1} hoveredTile={hoveredTile}/> : <Spacer /> }
             </HStack>
             <Spacer />
-            {(sequentialTiles.length === 0 && pongTiles.length === 0 && kongTiles.reduce((count, row) => count + row.length, 0) <= 1 && !game) ? <Box h='100px' /> : <Actions lastDiscard={lastDiscard} sequentialTiles={sequentialTiles} pongTiles={pongTiles} kongTiles={kongTiles} game={game} handleChow={handleChow} handlePong={handlePong} handleKong={handleKong} handleGame={handleGame} /> }
+            {(sequentialTiles.length === 0 && pongTiles.length === 0 && kongTiles.reduce((count, row) => count + row.length, 0) <= 1 && !game && !validMove) ? <Box h='100px' /> : <Actions lastDiscard={lastDiscard} sequentialTiles={sequentialTiles} pongTiles={pongTiles} kongTiles={kongTiles} game={game} handleChow={handleChow} handlePong={handlePong} handleKong={handleKong} handleGame={handleGame} validMove={validMove} handleSkip={handleSkip} /> }
             { gameState[gameStateIndex] &&
             <Box position='relative' zIndex={2}>
                 <Box w='100%' m='auto'>

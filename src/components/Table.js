@@ -9,10 +9,10 @@ import Information from './Information';
 import Username from './Username';
 
 export default function Table() {
-  let sequentialTiles_top, sequentialTiles_mid, sequentialTiles_bot
+  let sequentialTiles_top, sequentialTiles_mid, sequentialTiles_bot, validMove_temp
   const gameId = useParams().gameId
   //socket stuff
-  const [socketUrl, setSocketUrl] = useState(`wss://mahjong.irscybersec.tk/api/${gameId}`); //`ws://localhost:3001/${gameId}` || `wss://mahjong.irscybersec.tk/api/${gameId}`
+  const [socketUrl, setSocketUrl] = useState(`ws://localhost:3001/${gameId}`); //`ws://localhost:3001/${gameId}` || `wss://mahjong.irscybersec.tk/api/${gameId}`
   const [messageHistory, setMessageHistory] = useState([]);
   //set users
   const [onlineUsers, setOnlineUsers] = useState([])
@@ -32,6 +32,7 @@ export default function Table() {
   const [discards, setDiscards] = useState([])
   const [lastDiscard, setLastDiscard] = useState()
   //moves
+  const [validMove, setValidMove] = useState(false)
   const [sequentialTiles, setSequentialTiles] = useState([])
   const [pongTiles, setPongTiles] = useState([])
   const [kongTiles, setKongTiles] = useState([])
@@ -63,6 +64,11 @@ export default function Table() {
   const handleDiscard = () => {
     if (!roundEnd){
       game ? setGame(false) : setGame(false) //if self-drawn, set game back to false
+      //if there was a valid move, set it to false and send skip to server
+      if (validMove) {
+        setValidMove(false)
+        sendMessage(clientID + " skip")
+      }
       console.log("Discarding ", selectedTile)
       sendMessage('Discard: ' + JSON.stringify(selectedTile))
       //filter out the discarded tile from our hand
@@ -151,6 +157,7 @@ export default function Table() {
 
   //functions for making moves (chow, pong, kong, game)
   const checkValidMoves = (lastDiscard) => {
+    validMove_temp = false
     //if there was a last discard and last discarder is not the player
     if (lastDiscard && clientID !== previousPlayer){
       //check for winning hand
@@ -159,24 +166,21 @@ export default function Table() {
       console.log("Summary: ",summary_temp)
       //if the discarded tile builds a winning hand and has more than minimum points
       if (game_temp && summary_temp.totalPoints >= minimumPoints) {
+        setValidMove(true)
+        validMove_temp = true
         setGame(game_temp)
-        setTimeout(() => {
-          setGame(false)
-        },delay)
       }
       //check for pong
       let sameTiles = tiles.filter(e => (e.suit === lastDiscard.suit) && (e.value === lastDiscard.value)).concat(lastDiscard)
       console.log("Same tiles: ", sameTiles)
       if (sameTiles.length == 3) {
+        setValidMove(true)
+        validMove_temp = true
         setPongTiles([sameTiles])
-        setTimeout(() => {
-          setPongTiles([])
-        },delay)
       }else if (sameTiles.length == 4){
+        setValidMove(true)
+        validMove_temp = true
         setKongTiles([sameTiles.concat("three")])
-        setTimeout(() => {
-          setKongTiles([])
-        },delay)
       }
 
       //check if last discard is from the guy before you
@@ -193,24 +197,39 @@ export default function Table() {
         let sequentialTiles_temp = [sequentialTiles_top,sequentialTiles_mid,sequentialTiles_bot].filter(e => e.length===2)
 
         if (sequentialTiles_temp.length > 0){
+          setValidMove(true)
+          validMove_temp = true
           setSequentialTiles(sequentialTiles_temp)
-          setTimeout(() => {
-            setSequentialTiles([])
-          },delay)
         }
 
       }
     }
+    //tell server that to wait for our valid move
+    if (validMove_temp) {
+      sendMessage(clientID + " validMove")
+    }
+  }
+
+  const handleSkip = () => {
+    console.log("SKIP!")
+    sendMessage(clientID + " skip")
+    setValidMove(false)
+    setGame(false)
+    setPongTiles([])
+    setKongTiles([])
+    setSequentialTiles([])
   }
 
   const handlePong = (pongSet) => {
     console.log("PONG!", pongTiles)
+    setValidMove(false)
     setPongTiles([])
     sendMessage(clientID + " pong " + JSON.stringify(pongSet))
   }
 
   const handleKong = (kongSet, type) => {
     console.log("KONG!", kongSet, type)
+    setValidMove(false)
     setKongTiles([])
     if (type === "three"){
       sendMessage(clientID + " threekong " + JSON.stringify(kongSet))
@@ -223,18 +242,24 @@ export default function Table() {
 
   const handleChow = (chowSet) => {
     console.log("CHOW!", sequentialTiles)
+    setValidMove(false)
     setSequentialTiles([])
     sendMessage(clientID + " chow " + JSON.stringify(chowSet))
   }
 
   const handleGame = () => {
     sendMessage(clientID + " WINS! "+JSON.stringify(summary)+" "+JSON.stringify(tiles))
+    setValidMove(false)
     setGame(false)
     setTiles([])
   }
 
   const handleNewGame = () => {
     sendMessage("New game!")
+  }
+
+  const addBot = () => {
+    sendMessage("addBot")
   }
 
   const {
@@ -277,6 +302,7 @@ export default function Table() {
         if (tiles_temp.length !== 13){
           console.log("Tiles:",tiles)
           let [game_temp, summary_temp] = checkGame(tiles,revealedTiles,bonusTiles,tableWind,yourWind,[], tiles_temp)
+          setValidMove(game_temp)
           checkKong(tiles_temp)
           setGame(game_temp)
           setSummary(summary_temp)
@@ -293,10 +319,15 @@ export default function Table() {
         setCurrentTurn(true)
       }else if (lastMessage.data.includes("Discards")) {
         let discards_temp = JSON.parse(lastMessage.data.replace("Discards: ", ""))
+        //only set the last discard if a new tile is discarded, this is to avoid taking the last discard when someone else takes the last discard
+        if (discards_temp.length > discards.length) {
+          setLastDiscard(discards_temp.at(-1))
+          checkValidMoves(discards_temp.at(-1))
+          console.log("Last discarded", discards_temp.at(-1))
+        }else{
+          setLastDiscard()
+        }
         setDiscards(discards_temp)
-        setLastDiscard(discards_temp.at(-1))
-        console.log("Last discarded", discards_temp.at(-1))
-        checkValidMoves(discards_temp.at(-1))
       }else if (lastMessage.data.includes("Previous player: ")) {
         setPreviousPlayer(lastMessage.data.replace("Previous player: ",""))
       }else if (lastMessage.data.includes("Ping!")){
@@ -347,13 +378,13 @@ export default function Table() {
       <Username sendMessage={sendMessage} />
       
       <Flex zIndex={1} w='100%' m='auto' position="absolute" >
-        <Board clientID={clientID} tiles={tiles} newTile={newTile} handleSelectTile={handleSelectTile} currentTurn={currentTurn} currentPlayer={currentPlayer} gameState={gameState} discards={discards}  selectedTile={selectedTile} handleDiscard={handleDiscard} lastDiscard={lastDiscard} pongTiles={pongTiles} handlePong={handlePong}handleChow={handleChow} sequentialTiles={sequentialTiles} kongTiles={kongTiles} handleKong={handleKong} game={game} handleGame={handleGame} />
+        <Board clientID={clientID} tiles={tiles} newTile={newTile} handleSelectTile={handleSelectTile} currentTurn={currentTurn} currentPlayer={currentPlayer} gameState={gameState} discards={discards}  selectedTile={selectedTile} handleDiscard={handleDiscard} lastDiscard={lastDiscard} pongTiles={pongTiles} handlePong={handlePong}handleChow={handleChow} sequentialTiles={sequentialTiles} kongTiles={kongTiles} handleKong={handleKong} game={game} handleGame={handleGame} validMove={validMove} handleSkip={handleSkip} />
       </Flex>
 
       <Flex zIndex={2} h='100vh' float="right" position="relative">
         <Button variant="link" _focus={false} onClick={onToggleInformation}> {!isOpenInformation? "ᐅ" : "ᐊ" } </Button>
         <Collapse in={!isOpenInformation} onClose={onCloseInformation} placement='right' >
-          <Information tableWind={tableWind} yourWind={yourWind} playerID={clientID} currentPlayer={currentPlayer} gameState={gameState} handleNewGame={handleNewGame} roundEnd={roundEnd} onOpen={onOpenSummary} summary={summary} connectionStatus={connectionStatus} />
+          <Information tableWind={tableWind} yourWind={yourWind} playerID={clientID} currentPlayer={currentPlayer} gameState={gameState} handleNewGame={handleNewGame} roundEnd={roundEnd} onOpen={onOpenSummary} addBot={addBot} connectionStatus={connectionStatus} />
         </Collapse>
       </Flex>
 

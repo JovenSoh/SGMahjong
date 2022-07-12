@@ -3,7 +3,7 @@ import { CopyIcon, CheckIcon } from "@chakra-ui/icons"
 import NameCard from './NameCard'
 import ScoreInfo from './ScoreInfo'
 
-export default function Information({tableWind,yourWind, playerID, currentPlayer, gameState, handleNewGame, roundEnd, onOpen, summary, connectionStatus}){
+export default function Information({tableWind,yourWind, playerID, currentPlayer, gameState, handleNewGame, roundEnd, onOpen, addBot, connectionStatus}){
     //Invite link
     const {hasCopied, onCopy} = useClipboard(window.location.href)
     
@@ -186,8 +186,10 @@ export default function Information({tableWind,yourWind, playerID, currentPlayer
                                 <Box w='190px'>
                                     {score}
                                 </Box>
+                                <Button isDisabled={gameState.length >= 4} onClick={addBot} size='sm' variant='outline'> Add bot</Button>
                             </Box>
                             <Flex>
+                                
                                 <ButtonGroup isAttached size='sm' variant='outline'>
                                     <Button disabled={!roundEnd} onClick={onOpen}>Summary</Button>
                                     <Button disabled={!roundEnd} onClick={handleNewGame}>New game</Button>

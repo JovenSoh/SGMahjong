@@ -2,7 +2,7 @@ import {Box, HStack, Button, Spacer} from '@chakra-ui/react'
 import { compare } from './Mahjong'
 import Tileset from './Tileset'
 
-export default function Actions({lastDiscard, sequentialTiles, pongTiles, kongTiles, game, handleChow, handlePong, handleKong, handleGame}){
+export default function Actions({lastDiscard, sequentialTiles, pongTiles, kongTiles, game, handleChow, handlePong, handleKong, handleGame, validMove, handleSkip}){
     
     const chowAction = sequentialTiles.map((e) => {
         return(
@@ -53,12 +53,21 @@ export default function Actions({lastDiscard, sequentialTiles, pongTiles, kongTi
         )
     }
 
+    const skipAction = () => {
+        return(
+            <Button w='100px' h='50px' textColor="white" p='0' fontSize="18" variant='ghost' bg='#55342b' _hover={{bg:"#a36453"}}  onClick={handleSkip} display={validMove ? "block" : "none"} >
+                Skip
+            </Button>
+        )
+    }
+ 
     return(
         <HStack h='100px'>
-            {(sequentialTiles.length > 0) ? chowAction : null}
-            {(pongTiles.length > 0) ? pongAction : null}
+            {validMove ? skipAction(): null}
+            {(sequentialTiles.length > 0) && validMove ? chowAction : null}
+            {(pongTiles.length > 0) && validMove ? pongAction : null}
             {(kongTiles.length > 0) ? kongAction : null}
-            {game ? gameAction() : null}
+            {game && validMove ? gameAction() : null}
         </HStack>
     )
 }
