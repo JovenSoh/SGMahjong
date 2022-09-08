@@ -20,9 +20,11 @@ export default function Tileset({tiles, direction, hoveredTile}) {
     return (
       <HStack spacing='1px'>
       {tiles.map((tile) => {
-        return (
-          <Tile picture={tile.picture} hoveredTile={hoveredTile} />
-          )
+        if (tile){
+          return (
+            <Tile picture={tile.picture} hoveredTile={hoveredTile} />
+            )
+        }
       })}
       </HStack>
     )
