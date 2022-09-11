@@ -12,7 +12,7 @@ export default function Table() {
   let sequentialTiles_top, sequentialTiles_mid, sequentialTiles_bot, validMove_temp
   const gameId = useParams().gameId
   //socket stuff
-  const [socketUrl, setSocketUrl] = useState(`ws://localhost:3001/${gameId}`); //`ws://localhost:3001/${gameId}` || `wss://mahjong.irscybersec.tk/api/${gameId}`
+  const [socketUrl, setSocketUrl] = useState(`wss://mahjong.irscybersec.ml/api/${gameId}`); //`ws://localhost:3001/${gameId}` || `wss://mahjong.irscybersec.ml/api/${gameId}`
   const [messageHistory, setMessageHistory] = useState([]);
   //set users
   const [onlineUsers, setOnlineUsers] = useState([])
@@ -330,7 +330,7 @@ export default function Table() {
         setDiscards(discards_temp)
       }else if (lastMessage.data.includes("Previous player: ")) {
         setPreviousPlayer(lastMessage.data.replace("Previous player: ",""))
-      }else if (lastMessage.data.includes("Ping!")){
+      }else if (lastMessage.data.includes("Pong!")){
         sendMessage("Ping!")
       }else if (lastMessage.data.includes("Revealed")) {
         //sucessfull move made
