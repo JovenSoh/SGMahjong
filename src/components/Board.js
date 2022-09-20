@@ -46,10 +46,11 @@ export default function Board({clientID, tiles, newTile, handleSelectTile,curren
 
     })
 
+    
 
     return(
         <>
-        <VStack h='95vh' w='95vh' m='auto' mt='2vh' bgColor="#006442" borderWidth='5px' borderColor='#55342b'  borderStyle='solid'>
+        <VStack h='95vh' w={ window.innerHeight > window.innerWidth ? '95vw' : '95vh' } m='auto' mt='2vh' bgColor="#006442" borderWidth='5px' borderColor='#55342b'  borderStyle='solid'>
             { gameState[(gameStateIndex+2)%4]? <OtherPlayer gameState={gameState} gameStateIndex={gameStateIndex} currentPlayer={currentPlayer} playerIndex={2} hoveredTile={hoveredTile}/> : <Spacer /> }
             <Spacer />
             <HStack w='100%'>

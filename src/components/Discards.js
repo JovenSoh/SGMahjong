@@ -13,7 +13,7 @@ export default function Discards({discards, hoveredTile, setHoveredTile, handleH
     })
 
     return(
-        <Wrap spacing='5px' h='50vh' w='50vh' >
+        <Wrap spacing='5px' h='50vh' w='50vh' overflowY='auto' overflowX='hidden' >
                 {tileList}
         </Wrap>
     )

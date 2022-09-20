@@ -1,8 +1,11 @@
 import {Image} from "@chakra-ui/react"
 
 export default function Tile({picture, color, hoveredTile}){
+    let shadowColor
     if (!color){
-        let color = "#343434"
+        shadowColor = "#343434"
+    }else{
+        shadowColor = color
     }
 
     //if there is a hovered tile
@@ -10,16 +13,16 @@ export default function Tile({picture, color, hoveredTile}){
         //if hovered tile has the same picture
         if (picture === hoveredTile.picture){
             return(
-                <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${picture}.jpg`} fallbackSrc={"../images/" + picture + ".jpg"}  h="6vh" borderRadius="5px" borderWidth="1px" borderColor="#343434" borderStyle="solid" boxShadow={`3px 4px ${color}`} />
+                <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${picture}.jpg`} fallbackSrc={"../images/" + picture + ".jpg"}  h={ window.innerHeight > window.innerWidth ? '8vw' : '6vh' } borderRadius="5px" borderWidth="1px" borderColor="#343434" borderStyle="solid" boxShadow={`3px 4px ${shadowColor}`} />
             )
         }else{
             return(
-                <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${picture}.jpg`} fallbackSrc={"../images/" + picture + ".jpg"} opacity="30%"  h="6vh" borderRadius="5px" borderWidth="1px" borderColor="#343434" borderStyle="solid" boxShadow={`300px 400px 100px ${color}`} />
+                <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${picture}.jpg`} fallbackSrc={"../images/" + picture + ".jpg"} h={ window.innerHeight > window.innerWidth ? '8vw' : '6vh' }  borderRadius="5px" borderWidth="1px" borderColor="#343434" borderStyle="solid" boxShadow={`3px 4px ${shadowColor}`} opacity="30%" />
             )            
         }
     }else{
         return (
-            <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${picture}.jpg`} fallbackSrc={"../images/" + picture + ".jpg"}  h="6vh" borderRadius="5px" borderWidth="1px" borderColor="#343434" borderStyle="solid" boxShadow={`3px 4px ${color}`} />
+            <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${picture}.jpg`} fallbackSrc={"../images/" + picture + ".jpg"}  h={ window.innerHeight > window.innerWidth ? '8vw' : '6vh' } borderRadius="5px" borderWidth="1px" borderColor="#343434" borderStyle="solid" boxShadow={`3px 4px ${shadowColor}`} />
         )
     }
 

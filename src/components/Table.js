@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import {Flex, Button, Box, Spacer, Collapse, useDisclosure} from '@chakra-ui/react'
+import {Box, Flex, Button, Collapse, useDisclosure} from '@chakra-ui/react'
+import { CloseIcon, HamburgerIcon } from '@chakra-ui/icons'
 import { useParams } from "react-router-dom"
 import { checkGame, compare, getChow } from './Mahjong';
 import Board from './Board'
@@ -374,21 +375,25 @@ export default function Table() {
 
 
   return (
-    <>
+    <Box h='100vh' w='100vw' bg='#E3DBB3'>
       <Username sendMessage={sendMessage} />
       
       <Flex zIndex={1} w='100%' m='auto' position="absolute" >
         <Board clientID={clientID} tiles={tiles} newTile={newTile} handleSelectTile={handleSelectTile} currentTurn={currentTurn} currentPlayer={currentPlayer} gameState={gameState} discards={discards}  selectedTile={selectedTile} handleDiscard={handleDiscard} lastDiscard={lastDiscard} pongTiles={pongTiles} handlePong={handlePong}handleChow={handleChow} sequentialTiles={sequentialTiles} kongTiles={kongTiles} handleKong={handleKong} game={game} handleGame={handleGame} validMove={validMove} handleSkip={handleSkip} />
       </Flex>
 
-      <Flex zIndex={2} h='100vh' float="right" position="relative">
-        <Button variant="link" _focus={false} onClick={onToggleInformation}> {!isOpenInformation? "ᐅ" : "ᐊ" } </Button>
+      
+      <Flex zIndex={2}  float="right" position="relative">
         <Collapse in={!isOpenInformation} onClose={onCloseInformation} placement='right' >
           <Information tableWind={tableWind} yourWind={yourWind} playerID={clientID} currentPlayer={currentPlayer} gameState={gameState} handleNewGame={handleNewGame} roundEnd={roundEnd} onOpen={onOpenSummary} addBot={addBot} connectionStatus={connectionStatus} />
         </Collapse>
       </Flex>
 
+      <Flex zIndex={2}  float="right" position="relative">
+        <Button variant="link" _focus={false} onClick={onToggleInformation} alignItems='top' mt='3vh' h='50px'> {!isOpenInformation? <CloseIcon boxSize={4} /> : <HamburgerIcon boxSize={6} /> } </Button>
+      </Flex>
+
       <Summary username={gameState.find(e => e.playerID === winnerID)} roundEnd={roundEnd} summary={summary} handleNewGame={handleNewGame} draw={draw} isOpen={isOpenSummary} onOpen={onOpenSummary} onClose={onCloseSummary} />
-    </>
+    </Box>
   );
 };

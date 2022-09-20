@@ -31,31 +31,31 @@ export default function Summary({username, roundEnd, summary, handleNewGame, dra
         十三幺: "13 Wonders"
     }
     //When there is a summary
-    if (roundEnd){
-        let summary_filtered = []
-        //filter out to only those with points
-        summary = Object.keys(summary).forEach(key => {
-            //if value (point) is greater than 0
-            if (summary[key] > 0){
-                summary_filtered = summary_filtered.concat({
-                                        name: nameDict[key],
-                                        points: summary[key]
-                                    })
-            }
-        })
-
-        const table = summary_filtered.map(e => {
-            return (
-                <Tr>
-                    <Td>{e.name}</Td>
-                    <Td isNumeric>{e.points}</Td>
-                </Tr>
-            )
-        })
-
-        console.log("Summary filtered", summary_filtered)
-        
+    if (roundEnd){        
         if (!draw){
+            let summary_filtered = []
+            //filter out to only those with points
+            console.log("Summary:", summary )
+            summary = Object.keys(summary).forEach(key => {
+                //if value (point) is greater than 0
+                if (summary[key] > 0){
+                    summary_filtered = summary_filtered.concat({
+                                            name: nameDict[key],
+                                            points: summary[key]
+                                        })
+                }
+            })
+
+            const table = summary_filtered.map(e => {
+                return (
+                    <Tr>
+                        <Td>{e.name}</Td>
+                        <Td isNumeric>{e.points}</Td>
+                    </Tr>
+                )
+            })
+
+            console.log("Summary filtered", summary_filtered)
             return (
                 <>
                     <Modal isOpen={isOpen} onClose={onClose}>
@@ -88,6 +88,7 @@ export default function Summary({username, roundEnd, summary, handleNewGame, dra
                 </>
             )
         }else{
+            
             return(
                 <Modal isOpen={isOpen} onClose={onClose}>
                     <ModalOverlay />

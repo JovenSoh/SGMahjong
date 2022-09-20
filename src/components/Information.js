@@ -6,6 +6,17 @@ import ScoreInfo from './ScoreInfo'
 export default function Information({tableWind,yourWind, playerID, currentPlayer, gameState, handleNewGame, roundEnd, onOpen, addBot, connectionStatus}){
     //Invite link
     const {hasCopied, onCopy} = useClipboard(window.location.href)
+
+    //convert tableWind to image
+    let windImage = {
+        "~east": "}wind1",
+        "~south": "}wind2",
+        "~west": "}wind3",
+        "~north": "}wind4"
+    }
+
+    let tWind = windImage[tableWind]
+    let yWind = windImage[yourWind]
     
     const score = gameState.map((player) => {
         return(
@@ -27,13 +38,13 @@ export default function Information({tableWind,yourWind, playerID, currentPlayer
             name: "Prevailing wind set",
             score: 1,
             info: "Pong or kong of prevailing wind",
-            pictures: tableWind ? [tableWind,tableWind,tableWind] : ["~east","~east","~east"]
+            pictures: tWind ? [tWind,tWind,tWind] : ["}wind1","}wind1","}wind1"]
         },
         {
             name: "Seat wind set",
             score: 1,
             info: "Pong or kong of seat wind",
-            pictures: yourWind ? [yourWind,yourWind,yourWind] : ["~east","~east","~east"]
+            pictures: tWind ? [tWind,tWind,tWind] : ["}wind1","}wind1","}wind1"]
         },
         {
             name: "Dragon tiles set",
@@ -167,7 +178,7 @@ export default function Information({tableWind,yourWind, playerID, currentPlayer
     }
 
     return(
-        <Box w='200px' h='100vh' bg='white'>
+        <Box w='200px' h='100vh' bg='RGBA(255,255,255,0.9)'>
             <Tabs mr='10px' align='center' variant='enclosed' isFitted>
                 <TabList>
                     <Tab>Table</Tab>
@@ -179,7 +190,7 @@ export default function Information({tableWind,yourWind, playerID, currentPlayer
                         <VStack spacing='25px'>
                             <Box mt='5px'>
                                 <NameCard playerID={playerID} username={username} currentPlayer={currentPlayer} wind={yourWind}/>
-                                <Flex w='190px'>Prevailing Wind <Spacer /> <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${tableWind}.jpg`} fallbackSrc={`/images/${tableWind}.jpg`} h='30px' borderRadius="5px" /> </Flex>
+                                <Flex w='190px'>Prevailing Wind <Spacer /> <Image src={`https://raw.githubusercontent.com/JovenSoh/sgmahjong/gh-pages/images/${tWind}.jpg`} fallbackSrc={`/images/${tWind}.jpg`} h='30px' borderRadius="5px" /> </Flex>
                             </Box>
                             <Box>
                                 <Heading fontSize={20} mb='5px'>Leaderboard</Heading>

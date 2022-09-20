@@ -21,7 +21,7 @@ export default function Username({sendMessage}) {
             <ModalContent>
                 <ModalHeader>Username</ModalHeader>
                 <FormControl px='20px'>
-                    <Input onKeyPress={(e) => { (e.key==="Enter") ? submitUsername() : console.log() }} onChange={onUsernameChange} value={username} placeholder="Username" />
+                    <Input onKeyPress={(e) => { (e.key==="Enter") ? submitUsername() : console.log() }} onChange={onUsernameChange} value={username} placeholder="John Tan..." />
                     <Flex>
                         <Spacer />
                         <Button my='10px' onClick={submitUsername} type='submit'>Submit</Button>
